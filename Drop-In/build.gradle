@@ -1,7 +1,8 @@
 apply plugin: 'com.android.library'
 apply plugin: 'maven'
 apply plugin: 'signing'
-apply plugin: 'io.codearte.nexus-staging'
+apply plugin: 'com.github.dcendents.android-maven'
+group='com.github.bblackbelt.dropin'
 
 def LOCALHOST_IP = System.properties['LOCALHOST_IP'] ?: '"10.0.2.2"';
 def GATEWAY_IP = System.properties['GATEWAY_IP'] ?: '"10.0.2.2"';
@@ -14,8 +15,8 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 56
-        versionName '3.0.2-SNAPSHOT'
+        versionCode 58
+        versionName '3.0.4'
 
         consumerProguardFiles 'proguard.pro'
 
@@ -85,67 +86,4 @@ artifacts {
     archives sourcesJar
 }
 
-signing {
-    sign configurations.archives
-}
 
-nexusStaging {
-    packageGroup = "com.braintreepayments"
-}
-
-def sonatypeUsername = System.properties.containsKey('sonatypeUsername') ? System.properties['sonatypeUsername'] : ''
-def sonatypePassword = System.properties.containsKey('sonatypePassword') ? System.properties['sonatypePassword'] : ''
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
-                authentication(userName: sonatypeUsername, password: sonatypePassword)
-            }
-            snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
-                authentication(userName: sonatypeUsername, password: sonatypePassword)
-            }
-
-            pom.setArtifactId 'drop-in'
-
-            pom.project {
-                name 'drop-in'
-                groupId = 'com.braintreepayments.api'
-                version = "${android.defaultConfig.versionName}"
-                packaging 'aar'
-                description 'Drop-in payment form for Braintree\'s Android SDK. Integrate this library to add a readymade UI for your payments.'
-                url 'https://github.com/braintree/braintree-android-drop-in'
-
-                scm {
-                    url 'scm:git@github.com:braintree/braintree-android-drop-in.git'
-                    connection 'scm:git@github.com:braintree/braintree-android-drop-in.git'
-                    developerConnection 'scm:git@github.com:braintree/braintree-android-drop-in.git'
-                }
-
-                developers {
-                    developer {
-                        id 'devs'
-                        name 'Braintree Payments'
-                    }
-                }
-
-                licenses {
-                    license {
-                        name 'MIT'
-                        url 'http://opensource.org/licenses/MIT'
-                        distribution 'repo'
-                    }
-                }
-            }
-
-            pom.whenConfigured { MavenPom pom ->
-                pom.dependencies.each {
-                    if (it.artifactId == 'play-services-wallet') {
-                        it.optional = true
-                    }
-                }
-            }
-        }
-    }
-}
