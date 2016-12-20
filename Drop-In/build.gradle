@@ -1,8 +1,9 @@
 apply plugin: 'com.android.library'
 apply plugin: 'maven'
 apply plugin: 'signing'
-apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'io.codearte.nexus-staging'
 group='com.github.bblackbelt.dropin'
+
 
 def LOCALHOST_IP = System.properties['LOCALHOST_IP'] ?: '"10.0.2.2"';
 def GATEWAY_IP = System.properties['GATEWAY_IP'] ?: '"10.0.2.2"';
@@ -15,8 +16,8 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 58
-        versionName '3.0.4'
+        versionCode 60
+        versionName '3.0.6'
 
         consumerProguardFiles 'proguard.pro'
 
@@ -86,4 +87,46 @@ artifacts {
     archives sourcesJar
 }
 
+signing {
+    sign configurations.archives
+}
 
+nexusStaging {
+    packageGroup = "com.braintreepayments"
+}
+
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+            
+            pom.setArtifactId 'drop-in'
+
+            pom.project {
+                name 'drop-in'
+                group='com.github.bblackbelt.dropin'
+                version = "${android.defaultConfig.versionName}"
+                packaging 'aar'
+                description 'Drop-in FORK payment form for Braintree\'s Android SDK. Integrate this library to add a readymade UI for your payments.'
+                url 'https://github.com/bblackbelt/braintree-android-drop-in.git'
+
+                licenses {
+                    license {
+                        name 'MIT'
+                        url 'http://opensource.org/licenses/MIT'
+                        distribution 'repo'
+                    }
+                }
+            }
+
+            pom.whenConfigured { MavenPom pom ->
+                pom.dependencies.each {
+                    if (it.artifactId == 'play-services-wallet') {
+                        it.optional = true
+                    }
+                }
+            }
+        }
+    }
+}
